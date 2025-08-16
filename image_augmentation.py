@@ -1,0 +1,121 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul  8 08:49:37 2024
+
+@author: Ganesh
+"""
+
+import pims
+from matplotlib import pyplot as plt
+import numpy as np
+import cv2
+
+
+import tensorflow as tf
+import numpy as np
+from tensorflow.keras.preprocessing.image import array_to_img, img_to_array, load_img
+
+#labels = pims.ImageSequence('H:/test_unet/images_to_train/labels/*.png')
+#images = pims.ImageSequence('H:/test_unet/images_to_train/images/*.png')
+
+labels = pims.ImageSequence('H:/new/train/labels/*.png') ### for sample 2
+images = pims.ImageSequence('H:/new/train/images/*.png')
+
+def rotate_image_tf(image, angle):
+    # Ensure the image is at least three-dimensional
+    if len(image.shape) == 2:
+        image = tf.expand_dims(image, axis=-1)
+    
+    # Convert degrees to radians
+    angle_rad = angle * np.pi / 180
+    # Rotate the image using tf.keras.preprocessing.image.apply_affine_transform
+    rotated_image = tf.keras.preprocessing.image.apply_affine_transform(
+        image.numpy(), theta=angle)
+    return tf.convert_to_tensor(rotated_image)
+
+
+n = np.random.randint(0,len(images))
+fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+ax1.imshow(images[n])
+ax2.imshow(labels[n])
+
+
+flipped_v = cv2.flip(labels[n],0)
+fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+ax1.imshow(images[n])
+ax2.imshow(flipped_v)
+
+flipped_h = cv2.flip(labels[n],1)
+fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+ax1.imshow(images[n])
+ax2.imshow(flipped_h)
+
+
+
+
+
+
+rotated= rotate_image_tf(labels[n], 130)
+rotated_image = array_to_img(rotated)
+fig, (ax1, ax2,ax3,ax4) = plt.subplots(1, 4, sharey=True)
+ax1.imshow(labels[n])
+ax2.imshow(rotated_image)
+ax3.imshow(flipped_h)
+ax4.imshow(flipped_v)
+
+
+rotated_np = rotated.numpy()
+
+# Plot histogram
+plt.figure()
+plt.hist(rotated_np.reshape(-1), bins=np.arange(0, 1.5, .1))
+plt.show()
+
+
+for i in range(0, len(images)):
+    image_vertical_flip = cv2.flip(images[i],0)
+    image_horizontal_flip = cv2.flip(images[i],1)
+    
+    image_rotation_45 = rotate_image_tf(images[i], 45)
+    image_rotation_45 = image_rotation_45.numpy()
+    image_rotation_45 = image_rotation_45.reshape(np.shape(images[i]))
+    
+    image_rotation_130 = rotate_image_tf(images[i], 130)
+    image_rotation_130 = image_rotation_130.numpy()
+    image_rotation_130 = image_rotation_130.reshape(np.shape(images[i]))
+    
+    label_vertical_flip = cv2.flip(labels[i],0)
+    label_horizontal_flip = cv2.flip(labels[i],1)
+    
+    
+    label_rotation_45 = rotate_image_tf(labels[i], 45)
+    label_rotation_45 = label_rotation_45.numpy()
+    label_rotation_45 = label_rotation_45.reshape(np.shape(labels[i]))
+    
+    label_rotation_130 = rotate_image_tf(labels[i], 130)
+    label_rotation_130 = label_rotation_130.numpy()
+    label_rotation_130 = label_rotation_130.reshape(np.shape(labels[i]))
+    
+    cv2.imwrite('H:/new/train/aug_images/v'+ str(i)+'.png', image_vertical_flip)
+    cv2.imwrite('H:/new/train/aug_images/h'+ str(i)+'.png', image_horizontal_flip)
+    cv2.imwrite('H:/new/train/aug_images/r'+ str(i)+'.png', image_rotation_45)
+    cv2.imwrite('H:/new/train/aug_images/rb'+ str(i)+'.png', image_rotation_130)
+    cv2.imwrite('H:/new/train/aug_images/actual' + str(i) + '.png', images[i] )
+    
+    cv2.imwrite('H:/new/train/aug_labels/v'+ str(i)+'.png', label_vertical_flip)
+    cv2.imwrite('H:/new/train/aug_labels/h'+ str(i)+'.png', label_horizontal_flip)
+    cv2.imwrite('H:/new/train/aug_labels/r'+ str(i)+'.png', label_rotation_45)
+    cv2.imwrite('H:/new/train/aug_labels/rb'+ str(i)+'.png', label_rotation_130)
+    cv2.imwrite('H:/new/train/aug_labels/actual' + str(i) + '.png', labels[i] )
+    
+    print(i)
+    
+    
+labels=pims.ImageSequence('H:/new/train/aug_labels/*.png')
+images=pims.ImageSequence('H:/new/train/aug_images/*.png')
+
+
+n = np.random.randint(0,len(images))
+fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+ax1.imshow(images[n])
+ax2.imshow(labels[n])
